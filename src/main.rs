@@ -1,17 +1,20 @@
 use opcodes::emulate_cycle;
 use processor::CPU;
-use sfml::{graphics::{Color, RenderTarget, RenderWindow, Sprite, Texture, Transformable}, system::{Vector2f}, window::{Event, Style}};
+use sfml::{
+    graphics::{Color, RenderTarget, RenderWindow},
+    window::{Event, Style},
+};
 use std::io::prelude::*;
-mod processor;
 mod graphics;
+mod processor;
 use graphics::PPU;
 mod opcodes;
 fn main() {
     let mut window = RenderWindow::new((640, 320), "Rusty Chip", Style::CLOSE, &Default::default());
-    
+
     let mut cpu: CPU = CPU::new();
     let mut ppu: PPU = PPU::new();
-    let mut gae: [u8; 4096] = [0; 4096];  
+    let mut gae: [u8; 4096] = [0; 4096];
     let mut file_in = std::fs::File::open("./roms/boncoder").unwrap();
     file_in.read(&mut gae).unwrap();
     for i in 0..4096 {
@@ -32,5 +35,4 @@ fn main() {
     }
 
     //window.set_active(true);
-    
 }
