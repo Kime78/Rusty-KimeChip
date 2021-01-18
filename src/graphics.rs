@@ -40,19 +40,25 @@ impl PPU {
         while i < (n + 1) as u64 {
             let mut j: u64 = 0;
             while j < 8 * 4 {
-                if cpu.ram[(i * 32 + j + cpu.ptr as u64) as usize] == 1 {
-                    self.pixels[(((i + x as u64) * 64) * 4 + (j + y as u64) * 4) as usize] = 0;
-                    self.pixels[(((i + x as u64) * 64) * 4 + (j + y as u64) * 4 + 1) as usize] =
+                //get the byte
+                let pixel_byte = cpu.ram[(cpu.ptr + i as u16) as usize];
+                let pixel = (pixel_byte >> (7 - (j / 4))) & 0x1;
+
+                if pixel == 0x1 {
+                    self.pixels[(((i + y as u64) * 64) * 4 + (j + x as u64) * 4) as usize] = 255;
+                    self.pixels[(((i + y as u64) * 64) * 4 + (j + x as u64) * 4 + 1) as usize] =
                         255;
-                    self.pixels[(((i + x as u64) * 64) * 4 + (j + y as u64) * 4 + 2) as usize] = 0;
-                    self.pixels[(((i + x as u64) * 64) * 4 + (j + y as u64) * 4 + 3) as usize] =
+                    self.pixels[(((i + y as u64) * 64) * 4 + (j + x as u64) * 4 + 2) as usize] =
                         255;
-                } else {
-                    self.pixels[(((i + x as u64) * 64) * 4 + (j + y as u64)) as usize] = 0;
-                    self.pixels[(((i + x as u64) * 64) * 4 + (j + y as u64) + 1) as usize] = 0;
-                    self.pixels[(((i + x as u64) * 64) * 4 + (j + y as u64) + 2) as usize] = 0;
-                    self.pixels[(((i + x as u64) * 64) * 4 + (j + y as u64) + 3) as usize] = 255;
+                    self.pixels[(((i + y as u64) * 64) * 4 + (j + x as u64) * 4 + 3) as usize] =
+                        255;
                 }
+                // } else {
+                //     self.pixels[(((i + x as u64) * 64) * 4 + (j + y as u64)) as usize] = 0;
+                //     self.pixels[(((i + x as u64) * 64) * 4 + (j + y as u64) + 1) as usize] = 0;
+                //     self.pixels[(((i + x as u64) * 64) * 4 + (j + y as u64) + 2) as usize] = 0;
+                //     self.pixels[(((i + x as u64) * 64) * 4 + (j + y as u64) + 3) as usize] = 0;
+                // }
 
                 j += 4;
             }

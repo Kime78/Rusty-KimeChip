@@ -201,7 +201,7 @@ impl CPU {
 
         let res: (u8, bool) = self.regs[x as usize].overflowing_add(self.regs[y as usize]);
         self.regs[x as usize] = res.0;
-        self.regs[0xF as usize] = res.1 as u8;
+        self.regs[0xF] = res.1 as u8;
     }
 
     pub fn sub_reg1_to_reg2(&mut self) {
@@ -212,7 +212,7 @@ impl CPU {
 
         let res: (u8, bool) = self.regs[x as usize].overflowing_sub(self.regs[y as usize]);
         self.regs[x as usize] = res.0;
-        self.regs[0xF as usize] = res.1 as u8;
+        self.regs[0xF] = res.1 as u8;
     }
 
     pub fn sub_reg2_to_reg1(&mut self) {
@@ -223,7 +223,7 @@ impl CPU {
 
         let res: (u8, bool) = self.regs[y as usize].overflowing_sub(self.regs[x as usize]);
         self.regs[x as usize] = res.0;
-        self.regs[0xF as usize] = res.1 as u8;
+        self.regs[0xF] = res.1 as u8;
     }
 
     pub fn set_ptr_to_imm(&mut self) {
@@ -235,7 +235,7 @@ impl CPU {
     pub fn jump_to_imm_with_reg(&mut self) {
         let highhalf: u16 = self.ram[self.pc] as u16;
         let high: u16 = (highhalf << 8) | (self.ram[self.pc + 1] as u16);
-        self.pc = high as usize & 0x0FFF + self.regs[0] as usize;
+        self.pc = (high as usize & 0x0FFF) + (self.regs[0] as usize);
     }
 
     pub fn rand(&mut self) {

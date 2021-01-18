@@ -15,8 +15,10 @@ fn main() {
     let mut cpu: CPU = CPU::new();
     let mut ppu: PPU = PPU::new();
     let mut gae: [u8; 4096] = [0; 4096];
-    let mut file_in = std::fs::File::open("./roms/boncoder").unwrap();
-    file_in.read(&mut gae).unwrap();
+    let mut file_in = std::fs::File::open("./roms/ibmlogo").unwrap();
+    let z = file_in.read(&mut gae).unwrap();
+    print!("{}", z);
+
     for i in 0..4096 {
         cpu.ram[0x200 + i] = gae[i];
     }
