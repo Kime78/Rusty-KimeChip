@@ -5,7 +5,7 @@ pub struct CPU {
     pub ram: [u8; 4096 + 0x200],
     pub pc: usize,
     pub ptr: u16,
-    regs: [u8; 16],
+    pub regs: [u8; 16],
     stack: [u16; 1024],
     stack_ptr: u8,
     delay: u8,
@@ -189,7 +189,7 @@ impl CPU {
         let high: u16 = (highhalf << 8) | (self.ram[self.pc + 1] as u16);
         let x: u8 = ((high & 0x0F00) >> 8) as u8;
 
-        self.regs[0xF] = (self.regs[x as usize] >> 4) & 0x80;
+        self.regs[0xF] = (self.regs[x as usize] & 0x80) >> 7;
         self.regs[x as usize] <<= 1;
     }
 
@@ -212,7 +212,7 @@ impl CPU {
 
         let res: (u8, bool) = self.regs[x as usize].overflowing_sub(self.regs[y as usize]);
         self.regs[x as usize] = res.0;
-        self.regs[0xF] = res.1 as u8;
+        self.regs[0xF] = !res.1 as u8;
     }
 
     pub fn sub_reg2_to_reg1(&mut self) {
@@ -223,7 +223,7 @@ impl CPU {
 
         let res: (u8, bool) = self.regs[y as usize].overflowing_sub(self.regs[x as usize]);
         self.regs[x as usize] = res.0;
-        self.regs[0xF] = res.1 as u8;
+        self.regs[0xF] = !res.1 as u8;
     }
 
     pub fn set_ptr_to_imm(&mut self) {
@@ -303,25 +303,33 @@ impl CPU {
     pub fn set_bcd(&mut self) {
         let highhalf: u16 = self.ram[self.pc] as u16;
         let high: u16 = (highhalf << 8) | (self.ram[self.pc + 1] as u16);
-        let mut digit: u8 = ((high & 0x0F00) >> 8) as u8;
-
+        let x: u8 = ((high & 0x0F00) >> 8) as u8;
+        let mut dig = self.regs[x as usize];
         let mut index = 3;
         while index > 0 {
-            self.ram[(self.ptr + index - 1) as usize] = digit % 10;
-            digit /= 10;
+            self.ram[(self.ptr + index - 1) as usize] = dig % 10;
+            dig /= 10;
             index -= 1;
         }
     }
 
     pub fn reg_dump(&mut self) {
-        for i in 0..15 {
-            self.ram[self.ptr as usize + i] = self.regs[i];
+        let highhalf: u16 = self.ram[self.pc] as u16;
+        let high: u16 = (highhalf << 8) | (self.ram[self.pc + 1] as u16);
+        let x: u8 = ((high & 0x0F00) >> 8) as u8;
+
+        for i in 0..x {
+            self.ram[self.ptr as usize + i as usize] = self.regs[i as usize];
         }
     }
 
     pub fn reg_load(&mut self) {
-        for i in 0..15 {
-            self.regs[i] = self.ram[self.ptr as usize + i]
+        let highhalf: u16 = self.ram[self.pc] as u16;
+        let high: u16 = (highhalf << 8) | (self.ram[self.pc + 1] as u16);
+        let x: u8 = ((high & 0x0F00) >> 8) as u8;
+
+        for i in 0..x {
+            self.regs[i as usize] = self.ram[self.ptr as usize + i as usize]
         }
     }
 }
