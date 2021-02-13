@@ -45,23 +45,23 @@ impl PPU {
                     let cx: u64 = ((cpu.regs[x as usize] + xx) % 64) as u64;
                     let cy: u64 = ((cpu.regs[y as usize] + yy) % 32) as u64;
                     //print!("Data: {}, cx: {}, cy: {}\n", data, cx, cy);
-                    // if self.pixels[(cx + cy * 64) as usize] == 255
-                    //     && self.pixels[(cx + cy * 64) as usize + 1] == 255
-                    //     && self.pixels[(cx + cy * 64) as usize + 2] == 255
-                    //     && self.pixels[(cx + cy * 64) as usize + 3] == 255
-                    // {
-                    //     self.pixels[(cx + cy * 64) as usize] = 0;
-                    //     self.pixels[(cx + cy * 64) as usize + 1] = 0;
-                    //     self.pixels[(cx + cy * 64) as usize + 2] = 0;
-                    //     self.pixels[(cx + cy * 64) as usize + 3] = 255;
-                    // } else {
-                    self.pixels[(cx * 4 + cy * 64 * 4) as usize] = 255;
-                    self.pixels[(cx * 4 + cy * 64 * 4) as usize + 1] = 255;
-                    self.pixels[(cx * 4 + cy * 64 * 4) as usize + 2] = 255;
-                    self.pixels[(cx * 4 + cy * 64 * 4) as usize + 3] = 255;
+                    if self.pixels[(cx * 4 + cy * 64 * 4) as usize] == 0
+                        && self.pixels[(cx * 4 + cy * 64 * 4) as usize + 1] == 255
+                        && self.pixels[(cx * 4 + cy * 64 * 4) as usize + 2] == 0
+                        && self.pixels[(cx * 4 + cy * 64 * 4) as usize + 3] == 255
+                    {
+                        self.pixels[(cx * 4 + cy * 64 * 4) as usize] = 0;
+                        self.pixels[(cx * 4 + cy * 64 * 4) as usize + 1] = 0;
+                        self.pixels[(cx * 4 + cy * 64 * 4) as usize + 2] = 0;
+                        self.pixels[(cx * 4 + cy * 64 * 4) as usize + 3] = 255;
+                    } else {
+                        self.pixels[(cx * 4 + cy * 64 * 4) as usize] = 0;
+                        self.pixels[(cx * 4 + cy * 64 * 4) as usize + 1] = 255;
+                        self.pixels[(cx * 4 + cy * 64 * 4) as usize + 2] = 0;
+                        self.pixels[(cx * 4 + cy * 64 * 4) as usize + 3] = 255;
                     //xxx += 4;
-                    cpu.regs[0xF] = 1;
-                    //}
+                        cpu.regs[0xF] = 1;
+                    }
                 }
             }
 

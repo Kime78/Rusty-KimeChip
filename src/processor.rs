@@ -1,3 +1,5 @@
+use crate::keypad;
+use keypad::*;
 use rand::Rng;
 use std::u8;
 use std::usize;
@@ -57,13 +59,20 @@ impl CPU {
     }
 
     pub fn call(&mut self) {
-        self.stack[self.stack_ptr as usize] = ((self.pc << 8) | (self.pc + 1)) as u16;
+        let highhalf: u16 = self.ram[self.pc] as u16;
+        let high: u16 = (highhalf << 8) | (self.ram[self.pc + 1] as u16);
+
+        self.stack[self.stack_ptr as usize] = self.pc as u16;
         self.stack_ptr += 1;
+
+        self.pc = high as usize & 0x0FFFusize;
+        self.pc -= 2;
     }
 
     pub fn return_from_call(&mut self) {
-        self.pc = self.stack[self.stack_ptr as usize] as usize;
         self.stack_ptr -= 1;
+        self.pc = self.stack[self.stack_ptr as usize] as usize;
+        //self.pc -= 2;
     }
 
     pub fn jump(&mut self) {
@@ -240,6 +249,7 @@ impl CPU {
 
     pub fn rand(&mut self) {
         let secret_number = rand::thread_rng().gen_range(0, 255);
+        print!("{}\n", secret_number);
         let highhalf: u16 = self.ram[self.pc] as u16;
         let high: u16 = (highhalf << 8) | (self.ram[self.pc + 1] as u16);
         let x: u8 = ((high & 0x0F00) >> 8) as u8;
@@ -249,15 +259,36 @@ impl CPU {
     }
 
     pub fn is_key_pressed(&mut self) {
-        panic!("ita1");
+        let highhalf: u16 = self.ram[self.pc] as u16;
+        let high: u16 = (highhalf << 8) | (self.ram[self.pc + 1] as u16);
+        let x: u8 = ((high & 0x0F00) >> 8) as u8;
+
+        if is_keypad_pressed(self.regs[x as usize]) {
+            self.pc += 2;
+        }
     }
 
     pub fn is_key_not_pressed(&mut self) {
-        panic!("ita2");
+        let highhalf: u16 = self.ram[self.pc] as u16;
+        let high: u16 = (highhalf << 8) | (self.ram[self.pc + 1] as u16);
+        let x: u8 = ((high & 0x0F00) >> 8) as u8;
+
+        if !is_keypad_pressed(self.regs[x as usize]) {
+            self.pc += 2;
+        }
     }
 
     pub fn get_key(&mut self) {
-        panic!("ita3");
+        let key = get_keypad();
+        if key != 0xFF {
+            let highhalf: u16 = self.ram[self.pc] as u16;
+            let high: u16 = (highhalf << 8) | (self.ram[self.pc + 1] as u16);
+            let x: u8 = ((high & 0x0F00) >> 8) as u8;
+
+            self.regs[x as usize] = key;
+        } else {
+            self.pc -= 2;
+        }
     }
 
     pub fn set_reg_to_delay(&mut self) {
@@ -305,12 +336,10 @@ impl CPU {
         let high: u16 = (highhalf << 8) | (self.ram[self.pc + 1] as u16);
         let x: u8 = ((high & 0x0F00) >> 8) as u8;
         let mut dig = self.regs[x as usize];
-        let mut index = 3;
-        while index > 0 {
-            self.ram[(self.ptr + index - 1) as usize] = dig % 10;
-            dig /= 10;
-            index -= 1;
-        }
+
+        self.ram[self.ptr as usize] = dig / 100;
+        self.ram[self.ptr as usize + 1] = dig / 10 % 10;
+        self.ram[self.ptr as usize + 2] = dig % 10;
     }
 
     pub fn reg_dump(&mut self) {
@@ -318,7 +347,7 @@ impl CPU {
         let high: u16 = (highhalf << 8) | (self.ram[self.pc + 1] as u16);
         let x: u8 = ((high & 0x0F00) >> 8) as u8;
 
-        for i in 0..x {
+        for i in 0..(x + 1) {
             self.ram[self.ptr as usize + i as usize] = self.regs[i as usize];
         }
     }
@@ -328,7 +357,7 @@ impl CPU {
         let high: u16 = (highhalf << 8) | (self.ram[self.pc + 1] as u16);
         let x: u8 = ((high & 0x0F00) >> 8) as u8;
 
-        for i in 0..x {
+        for i in 0..(x + 1) {
             self.regs[i as usize] = self.ram[self.ptr as usize + i as usize]
         }
     }
