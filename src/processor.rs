@@ -8,10 +8,11 @@ pub struct CPU {
     pub pc: usize,
     pub ptr: u16,
     pub regs: [u8; 16],
+    pub delay: u8,
+    pub sound: u8,
     stack: [u16; 1024],
     stack_ptr: u8,
-    delay: u8,
-    sound: u8,
+    debug: bool,
 }
 
 impl CPU {
@@ -49,6 +50,7 @@ impl CPU {
             ptr: 0,
             delay: 0,
             sound: 0,
+            debug: false,
         }
     }
 
@@ -61,7 +63,9 @@ impl CPU {
     pub fn call(&mut self) {
         let highhalf: u16 = self.ram[self.pc] as u16;
         let high: u16 = (highhalf << 8) | (self.ram[self.pc + 1] as u16);
-
+        if self.debug {
+            println!("call {}", high);
+        }
         self.stack[self.stack_ptr as usize] = self.pc as u16;
         self.stack_ptr += 1;
 
@@ -70,6 +74,9 @@ impl CPU {
     }
 
     pub fn return_from_call(&mut self) {
+        if self.debug {
+            println!("return");
+        }
         self.stack_ptr -= 1;
         self.pc = self.stack[self.stack_ptr as usize] as usize;
         //self.pc -= 2;
@@ -78,7 +85,9 @@ impl CPU {
     pub fn jump(&mut self) {
         let highhalf: u16 = self.ram[self.pc] as u16;
         let high: u16 = (highhalf << 8) | (self.ram[self.pc + 1] as u16);
-
+        if self.debug {
+            println!("jump {}", high);
+        }
         self.pc = high as usize & 0x0FFFusize; //endiness
         self.pc -= 2;
     }
@@ -88,7 +97,9 @@ impl CPU {
         let high: u16 = (highhalf << 8) | (self.ram[self.pc + 1] as u16);
         let x: u8 = ((high & 0x0F00) >> 8) as u8;
         let imm: u8 = (high & 0x00FF) as u8;
-
+        if self.debug {
+            println!("is(imm)({}) {} equal to {}", x, self.regs[x as usize], imm);
+        }
         if self.regs[x as usize] == imm {
             self.pc += 2;
         }
@@ -99,7 +110,9 @@ impl CPU {
         let high: u16 = (highhalf << 8) | (self.ram[self.pc + 1] as u16);
         let x: u8 = ((high & 0x0F00) >> 8) as u8;
         let imm: u8 = (high & 0x00FF) as u8;
-
+        if self.debug {
+            println!("is(imm) {} not equal to {}", self.regs[x as usize], imm);
+        }
         if self.regs[x as usize] != imm {
             self.pc += 2;
         }
@@ -110,7 +123,12 @@ impl CPU {
         let high: u16 = (highhalf << 8) | (self.ram[self.pc + 1] as u16);
         let x: u8 = ((high & 0x0F00) >> 8) as u8;
         let y: u8 = ((high & 0x00F0) >> 4) as u8;
-
+        if self.debug {
+            println!(
+                "is(reg) {} equal to {}",
+                self.regs[x as usize], self.regs[y as usize]
+            );
+        }
         if self.regs[x as usize] == self.regs[y as usize] {
             self.pc += 2;
         }
@@ -121,7 +139,12 @@ impl CPU {
         let high: u16 = (highhalf << 8) | (self.ram[self.pc + 1] as u16);
         let x: u8 = ((high & 0x0F00) >> 8) as u8;
         let y: u8 = ((high & 0x00F0) >> 4) as u8;
-
+        if self.debug {
+            println!(
+                "is(reg) {} equal to {}",
+                self.regs[x as usize], self.regs[y as usize]
+            );
+        }
         if self.regs[x as usize] != self.regs[y as usize] {
             self.pc += 2;
         }
@@ -132,7 +155,9 @@ impl CPU {
         let high: u16 = (highhalf << 8) | (self.ram[self.pc + 1] as u16);
         let x: u8 = ((high & 0x0F00) >> 8) as u8;
         let imm: u8 = (high & 0x00FF) as u8;
-
+        if self.debug {
+            println!("set(reg) {} to {}", x, imm);
+        }
         self.regs[x as usize] = imm;
     }
 
@@ -141,7 +166,9 @@ impl CPU {
         let high: u16 = (highhalf << 8) | (self.ram[self.pc + 1] as u16);
         let x: u8 = ((high & 0x0F00) >> 8) as u8;
         let imm: u8 = (high & 0x00FF) as u8;
-
+        if self.debug {
+            println!("add(reg) {} to {}", x, imm);
+        }
         let res: (u8, bool) = self.regs[x as usize].overflowing_add(imm);
         self.regs[x as usize] = res.0;
     }
@@ -151,7 +178,9 @@ impl CPU {
         let high: u16 = (highhalf << 8) | (self.ram[self.pc + 1] as u16);
         let x: u8 = ((high & 0x0F00) >> 8) as u8;
         let y: u8 = ((high & 0x00F0) >> 4) as u8;
-
+        if self.debug {
+            println!("set(reg) {} to reg {}", x, y);
+        }
         self.regs[x as usize] = self.regs[y as usize];
     }
 
@@ -160,7 +189,9 @@ impl CPU {
         let high: u16 = (highhalf << 8) | (self.ram[self.pc + 1] as u16);
         let x: u8 = ((high & 0x0F00) >> 8) as u8;
         let y: u8 = ((high & 0x00F0) >> 4) as u8;
-
+        if self.debug {
+            println!("or(reg) {} to {}", x, y);
+        }
         self.regs[x as usize] |= self.regs[y as usize];
     }
 
@@ -169,7 +200,9 @@ impl CPU {
         let high: u16 = (highhalf << 8) | (self.ram[self.pc + 1] as u16);
         let x: u8 = ((high & 0x0F00) >> 8) as u8;
         let y: u8 = ((high & 0x00F0) >> 4) as u8;
-
+        if self.debug {
+            println!("and(reg) {} to {}", x, y);
+        }
         self.regs[x as usize] &= self.regs[y as usize];
     }
 
@@ -178,7 +211,9 @@ impl CPU {
         let high: u16 = (highhalf << 8) | (self.ram[self.pc + 1] as u16);
         let x: u8 = ((high & 0x0F00) >> 8) as u8;
         let y: u8 = ((high & 0x00F0) >> 4) as u8;
-
+        if self.debug {
+            println!("xor(reg) {} to {}", x, y);
+        }
         self.regs[x as usize] ^= self.regs[y as usize];
     }
 
@@ -187,7 +222,9 @@ impl CPU {
         let highhalf: u16 = self.ram[self.pc] as u16;
         let high: u16 = (highhalf << 8) | (self.ram[self.pc + 1] as u16);
         let x: u8 = ((high & 0x0F00) >> 8) as u8;
-
+        if self.debug {
+            println!("rshift(reg) {}", x);
+        }
         self.regs[0xF] = self.regs[x as usize] & 0x1;
         self.regs[x as usize] >>= 1;
     }
@@ -197,7 +234,9 @@ impl CPU {
         let highhalf: u16 = self.ram[self.pc] as u16;
         let high: u16 = (highhalf << 8) | (self.ram[self.pc + 1] as u16);
         let x: u8 = ((high & 0x0F00) >> 8) as u8;
-
+        if self.debug {
+            println!("lshift(reg) {}", x);
+        }
         self.regs[0xF] = (self.regs[x as usize] & 0x80) >> 7;
         self.regs[x as usize] <<= 1;
     }
@@ -229,7 +268,9 @@ impl CPU {
         let high: u16 = (highhalf << 8) | (self.ram[self.pc + 1] as u16);
         let x: u8 = ((high & 0x0F00) >> 8) as u8;
         let y: u8 = ((high & 0x00F0) >> 4) as u8;
-
+        if self.debug {
+            println!("sub(reg) {} to {}", x, y);
+        }
         let res: (u8, bool) = self.regs[y as usize].overflowing_sub(self.regs[x as usize]);
         self.regs[x as usize] = res.0;
         self.regs[0xF] = !res.1 as u8;
@@ -238,23 +279,34 @@ impl CPU {
     pub fn set_ptr_to_imm(&mut self) {
         let highhalf: u16 = self.ram[self.pc] as u16;
         let high: u16 = (highhalf << 8) | (self.ram[self.pc + 1] as u16);
+        if self.debug {
+            println!("set(ptr) to {}", high & 0x0FFF);
+        }
         self.ptr = high & 0x0FFF;
     }
 
     pub fn jump_to_imm_with_reg(&mut self) {
         let highhalf: u16 = self.ram[self.pc] as u16;
         let high: u16 = (highhalf << 8) | (self.ram[self.pc + 1] as u16);
+        if self.debug {
+            println!(
+                "jmp to (imm) {} with {}",
+                high as usize & 0x0FFF,
+                self.regs[0] as usize
+            );
+        }
         self.pc = (high as usize & 0x0FFF) + (self.regs[0] as usize);
     }
 
     pub fn rand(&mut self) {
         let secret_number = rand::thread_rng().gen_range(0, 255);
-        print!("{}\n", secret_number);
         let highhalf: u16 = self.ram[self.pc] as u16;
         let high: u16 = (highhalf << 8) | (self.ram[self.pc + 1] as u16);
         let x: u8 = ((high & 0x0F00) >> 8) as u8;
         let imm: u8 = (high & 0x00FF) as u8;
-
+        if self.debug {
+            println!("rand(reg) {} with {}", secret_number, imm);
+        } //print!("{}\n", secret_number & imm);
         self.regs[x as usize] = secret_number & imm;
     }
 
@@ -295,7 +347,9 @@ impl CPU {
         let highhalf: u16 = self.ram[self.pc] as u16;
         let high: u16 = (highhalf << 8) | (self.ram[self.pc + 1] as u16);
         let x: u8 = ((high & 0x0F00) >> 8) as u8;
-
+        if self.debug {
+            println!("set(reg) {} to delay", x);
+        }
         self.regs[x as usize] = self.delay;
     }
 
@@ -303,7 +357,9 @@ impl CPU {
         let highhalf: u16 = self.ram[self.pc] as u16;
         let high: u16 = (highhalf << 8) | (self.ram[self.pc + 1] as u16);
         let x: u8 = ((high & 0x0F00) >> 8) as u8;
-
+        if self.debug {
+            println!("set(reg) {} to sound", x);
+        }
         self.sound = self.regs[x as usize];
     }
 
@@ -311,7 +367,9 @@ impl CPU {
         let highhalf: u16 = self.ram[self.pc] as u16;
         let high: u16 = (highhalf << 8) | (self.ram[self.pc + 1] as u16);
         let x: u8 = ((high & 0x0F00) >> 8) as u8;
-
+        if self.debug {
+            println!("set delay to reg {}", x);
+        }
         self.delay = self.regs[x as usize];
     }
 
@@ -319,7 +377,9 @@ impl CPU {
         let highhalf: u16 = self.ram[self.pc] as u16;
         let high: u16 = (highhalf << 8) | (self.ram[self.pc + 1] as u16);
         let x: u8 = ((high & 0x0F00) >> 8) as u8;
-
+        if self.debug {
+            println!("set ptr to spr {}", x);
+        }
         self.ptr = (self.regs[x as usize] * 5) as u16;
     }
 
@@ -327,16 +387,20 @@ impl CPU {
         let highhalf: u16 = self.ram[self.pc] as u16;
         let high: u16 = (highhalf << 8) | (self.ram[self.pc + 1] as u16);
         let x: u8 = ((high & 0x0F00) >> 8) as u8;
-
-        self.ptr = self.regs[x as usize] as u16;
+        if self.debug {
+            println!("add(reg) {} to ptr", x);
+        }
+        self.ptr += self.regs[x as usize] as u16;
     }
 
     pub fn set_bcd(&mut self) {
         let highhalf: u16 = self.ram[self.pc] as u16;
         let high: u16 = (highhalf << 8) | (self.ram[self.pc + 1] as u16);
         let x: u8 = ((high & 0x0F00) >> 8) as u8;
-        let mut dig = self.regs[x as usize];
-
+        let dig = self.regs[x as usize];
+        if self.debug {
+            println!("bcd {}", x);
+        }
         self.ram[self.ptr as usize] = dig / 100;
         self.ram[self.ptr as usize + 1] = dig / 10 % 10;
         self.ram[self.ptr as usize + 2] = dig % 10;
@@ -346,7 +410,9 @@ impl CPU {
         let highhalf: u16 = self.ram[self.pc] as u16;
         let high: u16 = (highhalf << 8) | (self.ram[self.pc + 1] as u16);
         let x: u8 = ((high & 0x0F00) >> 8) as u8;
-
+        if self.debug {
+            println!("pop {}", x);
+        }
         for i in 0..(x + 1) {
             self.ram[self.ptr as usize + i as usize] = self.regs[i as usize];
         }
@@ -356,7 +422,12 @@ impl CPU {
         let highhalf: u16 = self.ram[self.pc] as u16;
         let high: u16 = (highhalf << 8) | (self.ram[self.pc + 1] as u16);
         let x: u8 = ((high & 0x0F00) >> 8) as u8;
-
+        if self.debug {
+            println!("push {}", x);
+        }
+        // if x == 0 {
+        //     return;
+        // }
         for i in 0..(x + 1) {
             self.regs[i as usize] = self.ram[self.ptr as usize + i as usize]
         }

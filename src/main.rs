@@ -17,7 +17,7 @@ fn main() {
     let mut ppu: PPU = PPU::new();
     let mut gae: [u8; 4096] = [0; 4096];
     let mut file_in = std::fs::File::open("./roms/c8_test").unwrap();
-    let z = file_in.read(&mut gae).unwrap();
+    file_in.read(&mut gae).unwrap();
     // print!("{}", z);
 
     for i in 0..4096 {

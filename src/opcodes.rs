@@ -9,6 +9,9 @@ pub fn emulate_cycle(cpu: &mut CPU, ppu: &mut PPU) {
 
     let operation: u8 = ((opcode & 0xF000) >> 12) as u8;
     let mini_op = opcode & 0x000F;
+    if cpu.delay != 0 {
+        cpu.delay -= 1;
+    }
     //print!("PC = {} : {}\n",cpu.pc, opcode );
     match operation {
         0x0 => {
