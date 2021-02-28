@@ -311,6 +311,7 @@ impl CPU {
     }
 
     pub fn is_key_pressed(&mut self) {
+        //!("if key press");
         let highhalf: u16 = self.ram[self.pc] as u16;
         let high: u16 = (highhalf << 8) | (self.ram[self.pc + 1] as u16);
         let x: u8 = ((high & 0x0F00) >> 8) as u8;
@@ -325,8 +326,10 @@ impl CPU {
         let high: u16 = (highhalf << 8) | (self.ram[self.pc + 1] as u16);
         let x: u8 = ((high & 0x0F00) >> 8) as u8;
 
+        //println!("if key not press");
         if !is_keypad_pressed(self.regs[x as usize]) {
             self.pc += 2;
+            //print!("?");
         }
     }
 

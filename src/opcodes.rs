@@ -1,8 +1,9 @@
 use crate::{graphics, processor};
 use graphics::PPU;
 use processor::CPU;
+use sfml::graphics::RenderWindow;
 
-pub fn emulate_cycle(cpu: &mut CPU, ppu: &mut PPU) {
+pub fn emulate_cycle(cpu: &mut CPU, ppu: &mut PPU, win: &mut RenderWindow) {
     let highhalf: u16 = cpu.ram[cpu.pc] as u16;
     let high: u16 = (highhalf << 8) | (cpu.ram[cpu.pc + 1] as u16);
     let opcode: u16 = high;
@@ -16,7 +17,7 @@ pub fn emulate_cycle(cpu: &mut CPU, ppu: &mut PPU) {
     match operation {
         0x0 => {
             if opcode == 0x00E0 {
-                //clear screen
+                ppu.clear_frame();
             } else if opcode == 0x00EE {
                 cpu.return_from_call();
             } else {
@@ -46,7 +47,7 @@ pub fn emulate_cycle(cpu: &mut CPU, ppu: &mut PPU) {
         0xA => cpu.set_ptr_to_imm(),
         0xB => cpu.jump_to_imm_with_reg(),
         0xC => cpu.rand(),
-        0xD => ppu.draw_sprite(cpu),
+        0xD => ppu.draw_sprite(cpu, win),
         0xE => {
             let miniop: u8 = (opcode & 0x00FF) as u8;
 
