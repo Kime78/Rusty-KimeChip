@@ -17,6 +17,7 @@ impl PPU {
     }
 
     pub fn draw_sprite(&mut self, cpu: &mut CPU, win: &mut RenderWindow) {
+        
         let highhalf: u16 = cpu.ram[cpu.pc] as u16;
         let high: u16 = (highhalf << 8) | (cpu.ram[cpu.pc + 1] as u16);
         let x: u8 = ((high & 0x0F00) >> 8) as u8;
@@ -40,7 +41,7 @@ impl PPU {
                         self.pixels[(cx * 4 + cy * 64 * 4) as usize] = 0;
                         self.pixels[(cx * 4 + cy * 64 * 4) as usize + 1] = 0;
                         self.pixels[(cx * 4 + cy * 64 * 4) as usize + 2] = 0;
-                        self.pixels[(cx * 4 + cy * 64 * 4) as usize + 3] = 255;
+                        self.pixels[(cx * 4 + cy * 64 * 4) as usize + 3] = 0;
                         cpu.regs[0xF] = 1;
                     } else {
                         self.pixels[(cx * 4 + cy * 64 * 4) as usize] = 0;

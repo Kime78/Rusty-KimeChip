@@ -2,7 +2,7 @@ use crate::{graphics, processor};
 use graphics::PPU;
 use processor::CPU;
 use sfml::graphics::RenderWindow;
-
+use std::{thread, time};
 pub fn emulate_cycle(cpu: &mut CPU, ppu: &mut PPU, win: &mut RenderWindow) {
     let highhalf: u16 = cpu.ram[cpu.pc] as u16;
     let high: u16 = (highhalf << 8) | (cpu.ram[cpu.pc + 1] as u16);
@@ -11,7 +11,12 @@ pub fn emulate_cycle(cpu: &mut CPU, ppu: &mut PPU, win: &mut RenderWindow) {
     let operation: u8 = ((opcode & 0xF000) >> 12) as u8;
     let mini_op = opcode & 0x000F;
     if cpu.delay != 0 {
+        let ten_millis = time::Duration::from_nanos(1);
+        thread::sleep(ten_millis);
         cpu.delay -= 1;
+    }
+    if cpu.sound != 0 {
+        cpu.sound -= 1;
     }
     //print!("PC = {} : {}\n",cpu.pc, opcode );
     match operation {
